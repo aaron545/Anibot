@@ -88,6 +88,7 @@ function parseRewards(description) {
       for (const e of emojis) {
         rarity += (rarityMap[e] || 'unknown');
       }
+      const emoji = /SR|UR/.test(rarity) ? '🎴' : '🃏';
       return `${rarity.trim()} ${cleanedText} 🃏`;
     }
 
