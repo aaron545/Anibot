@@ -94,10 +94,10 @@ async function checkRaidParty(message, client){
         ownChannel.send(".rd start");
         msgLogger("ready to start raid!!!")
 
-        await delay(2000);
-        channel.send(".rd bt all");
-        msgLogger("start raid!!!")
-        raidAutoStart = false;
+        // await delay(2000);
+        // channel.send(".rd bt all");
+        // msgLogger("start raid!!!")
+        // raidAutoStart = false;
       } else {
         msgDebugger("人數不足!!")
       }
@@ -118,7 +118,7 @@ async function checkRaidReady(message, client){
     raidReady = true;
   }
 
-  if (message.channelId === anigameDMChannelId && message.content.includes("the Raid Challenge has started!") && raidReady){
+  if (message.channelId === anigameDMChannelId && message.content.includes("the Raid Challenge has started!") && (raidReady||raidAutoStart)){
     msgLogger("Leader start the raid, auto start!!")
     channel.send(".rd bt all");
     raidAutoStart = false;
