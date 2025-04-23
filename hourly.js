@@ -62,6 +62,7 @@ async function checkRaidParty(message, client){
   if (message.content.includes(".rd leave") && message.author.username === client.user.username){
     msgLogger("leave the raid!! auto start will be closed");
     raidAutoStart = false;
+    raidReady = false;
   }
 
   if (desc.includes("you are not currently in a raid!") && desc.includes(client.user.username)){

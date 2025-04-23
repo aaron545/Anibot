@@ -2,3 +2,4 @@ config.json
 festival gift.js
 wild card.js
 test*.js
+node_modules/
