@@ -1,0 +1,9 @@
+{
+  "token": "yourtoken",
+  "guildId": "835042324643184691",
+  "botChannelId":"1339531045187358720",
+  "ownChannelId":"your own Channel ID",
+  "anigameDMChannelId":"your private channel with anigame",
+  "lottox":"you can change from 0 to 5",
+  "lottoy":"you can change from 0 to 5"
+}
