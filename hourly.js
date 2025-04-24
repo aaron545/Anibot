@@ -171,8 +171,8 @@ async function checkHourly(message, client) {
   }
 
   if (message.content.includes('Hourly Reminder') && message.content.includes(user_at)) {
+    msgLogger('Got Hourly Reminder!!')
     lastHourlyTime = Date.now(); // ➤ 更新時間
-    msgLogger('Try to do hourly!!!');
 
     // 定義一個函式來延遲執行
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -210,8 +210,8 @@ async function checkHourly(message, client) {
 
   // check lotto 
   if (message.content.includes('Lotto Reminder') && message.content.includes(user_at)){
+    msgLogger('Got Lotto Reminder!!')
     lastLottoTime = Date.now(); // ➤ 更新時間
-    msgLogger('Try to do lotto!!!')
 
     setTimeout(() => {
       channel.send(".lotto")
@@ -235,6 +235,7 @@ async function checkHourly(message, client) {
 
   // check raid energy
   if (message.content.includes('Energy Reminder') && message.content.includes(user_at)){
+    msgLogger('Got Energy Reminder!!')
     channel.send(".rd bt all");
   }
 
@@ -257,6 +258,7 @@ async function checkHourly(message, client) {
   }
 
   if (message.content.includes('Stamina Reminder') && message.content.includes(user_at)){
+    msgLogger('Got Stamina Reminder!!')
     channel.send(".bt all");
   }
 
