@@ -88,8 +88,9 @@ function parseRewards(description) {
       for (const e of emojis) {
         rarity += (rarityMap[e] || 'unknown');
       }
+      msgDebugger(`rarity: ${rarity}`)
       const emoji = /SR|UR/.test(rarity) ? '🎴' : '🃏';
-      return `${rarity.trim()} ${cleanedText} 🃏`;
+      return `${rarity.trim()} ${cleanedText} ${emoji}`;
     }
 
     const matchedElement = Object.keys(elementEmojiMap).find(el => cleanedText.includes(el));
