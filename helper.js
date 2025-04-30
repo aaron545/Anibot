@@ -1,3 +1,5 @@
+const { kickList } = require('./config.json');
+
 function messageExtractor(message) {
   let embedTitle = message.embeds[0]?.title ?? 'empty_title';
   let embedDesc = message.embeds[0]?.description ?? 'empty_description';
@@ -88,7 +90,7 @@ function parseRewards(description) {
       for (const e of emojis) {
         rarity += (rarityMap[e] || 'unknown');
       }
-      msgDebugger(`rarity: ${rarity}`)
+      // msgDebugger(`rarity: ${rarity}`)
       const emoji = /SR|UR/.test(rarity) ? '🎴' : '🃏';
       return `${rarity.trim()} ${cleanedText} ${emoji}`;
     }
@@ -116,4 +118,10 @@ function parseRewards(description) {
   return rewards;
 }
 
-module.exports = { messageExtractor, msgLogger, msgDebugger, extractStamina, extractRaidParticipants, parseRewards };
+function getKickedMembers(members) {
+  return members
+    .map((name, index) => ({ name, index: index + 2 }))  // 加 2，代表實際位置
+    .filter(member => kickList.includes(member.name));
+}
+
+module.exports = { messageExtractor, msgLogger, msgDebugger, extractStamina, extractRaidParticipants, parseRewards, getKickedMembers };

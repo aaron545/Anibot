@@ -1,5 +1,5 @@
 const { guildId = '', botChannelId, ownChannelId, anigameDMChannelId, lottox, lottoy } = require('./config.json');
-const { messageExtractor, msgLogger , msgDebugger , extractStamina , extractRaidParticipants, parseRewards } = require('./helper');
+const { messageExtractor, msgLogger , msgDebugger , extractStamina , extractRaidParticipants, parseRewards, getKickedMembers } = require('./helper');
 
 let lastHourlyTime = Date.now();
 let lastLottoTime = Date.now();
@@ -71,6 +71,10 @@ async function checkRaidParty(message, client){
     raidReady = false;
   }
 
+  if (desc.includes("are you sure you would like to kick")){
+    message.clickButton({ X: 0, Y: 0 });
+  }
+
   if (message.author.username === 'AniGame' && title.includes("Raid Challenge Party")){
     const result = extractRaidParticipants(desc);
     if (!result) return;
@@ -86,11 +90,26 @@ async function checkRaidParty(message, client){
     if (raidAutoStart) {
       msgLogger(`leader: ${leader}, members: ${members}, members.length: ${members.length}`);
       if (leader != client.user.username) return;
-
       msgDebugger("I'm leader!!! hohoho~~")
+
+      // add kick code here 
+
+      const kickedMembers = getKickedMembers(members);
+      const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+      if (kickedMembers.length > 0) {
+        const sortedMembers = kickedMembers.sort((a, b) => b.index - a.index); // 降冪排序
+        for (const member of sortedMembers) {
+          msgLogger(`⚠️ 發現黑名單玩家：${member.name}，位置 index：${member.index}`);
+          ownChannel.send(`.rd kick ${member.index}`);
+          await delay(1000); // 每人間隔 0.5 秒
+        return;
+        }
+      }
+
+
       if (members.length >= 4){
         msgDebugger("人來啦!!")
-        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
         await delay(1000);
         ownChannel.send(".rd start");
         msgLogger("ready to start raid!!!")

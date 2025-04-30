@@ -4,6 +4,7 @@
   "botChannelId":"1339531045187358720",
   "ownChannelId":"your own Channel ID",
   "anigameDMChannelId":"your private channel with anigame",
+  "kickList":["211","chi_shin","211_chishin","any you want"],
   "lottox":"you can change from 0 to 5",
   "lottoy":"you can change from 0 to 5"
 }
