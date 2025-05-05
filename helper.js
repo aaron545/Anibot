@@ -124,4 +124,27 @@ function getKickedMembers(members) {
     .filter(member => kickList.includes(member.name));
 }
 
-module.exports = { messageExtractor, msgLogger, msgDebugger, extractStamina, extractRaidParticipants, parseRewards, getKickedMembers };
+function parseRaidLobbies(description) {
+  const pattern = /\*\*#\d+ \| (.+?) \[(.+?)\]\*\*.*?\n(.+?) \| Level (\d+) \| ID: (\d+)/g;
+
+  const raids = [...description.matchAll(pattern)].map(match => ({
+    name: match[1],
+    time: match[2],
+    rarity: match[3],
+    level: parseInt(match[4]),
+    id: match[5],
+  }));
+
+  return raids;
+}
+
+module.exports = { 
+  messageExtractor,
+  msgLogger,
+  msgDebugger,
+  extractStamina,
+  extractRaidParticipants,
+  parseRewards,
+  getKickedMembers,
+  parseRaidLobbies,
+};
