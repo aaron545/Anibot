@@ -1,4 +1,4 @@
-const { guildId = '', botChannelId, ownChannelId, anigameDMChannelId, lottox, lottoy } = require('./config.json');
+const { guildId = '', botChannelId, ownChannelId, anigameDMChannelId, wishList, lottox, lottoy } = require('./config.json');
 const helper = require('./helper');
 let lastHourlyTime = Date.now();
 let lastLottoTime = Date.now();
@@ -37,6 +37,12 @@ function startAutoReminder(client) {
       ownChannel.send(".rd lobby").catch(console.error);
     }
   }, 60 * 1000); // 每分鐘檢查一次
+
+  setInterval(() => {
+    if (raidAutoFind){
+      ownChannel.send(`.rd lobbies -n ${wishList.join(',')} -r r,sr,ur -d m,h,i`).catch(console.error);
+    }
+  }, 16 * 1000); // 每16秒
 }
 
 async function checkRaidParty(message, client){
@@ -68,6 +74,16 @@ async function checkRaidParty(message, client){
     helper.msgLogger("raid disappear!! auto start will be closed");
     raidAutoStart = false;
     raidReady = false;
+  }
+
+  if (message.content === 'start find' && message.author.username === client.user.username) {
+    helper.msgLogger("start auto find!!");
+    raidAutoFind = true;
+  }
+
+  if (message.content === 'stop find' && message.author.username === client.user.username) {
+    helper.msgLogger("stop auto find!!");
+    raidAutoFind = false;
   }
 
   if (desc.includes("are you sure you would like to kick")){
@@ -142,6 +158,26 @@ async function checkRaidReady(message, client){
     channel.send(".rd bt all");
     raidAutoStart = false;
     raidReady = false;
+  }
+}
+
+async function checkAutoFind(message,client){
+  if (message.channelId != ownChannelId) return;
+  const ownChannel = client.channels.cache.get(ownChannelId);
+  let [title, desc, embedAuthor, footer] = helper.messageExtractor(message);
+
+  if (title.includes('Raid Lobbies')) {
+    raids = helper.parseRaidLobbies(desc)
+    // console.log(raids)
+
+    for (const raid of raids) {
+      if (wishList.includes(raid.name)) {
+        ownChannel.send(`.rd join ${raid.id}`)
+        helper.msgLogger('success to find!!')
+        raidAutoFind = false;
+        break;
+      }
+    }
   }
 }
 
@@ -316,4 +352,4 @@ async function autoFindRaid(message, client) {
 }
 
 
-module.exports = { startAutoReminder, checkRaidParty, checkRaidReady, checkHourly, getRewards };
+module.exports = { startAutoReminder, checkRaidParty, checkRaidReady, checkAutoFind,  checkHourly, getRewards };

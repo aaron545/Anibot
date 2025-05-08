@@ -1,6 +1,6 @@
 const { Client } = require('discord.js-selfbot-v13');
 const { token } = require('./config.json');
-const { checkRaidParty , checkRaidReady , checkHourly, getRewards } = require('./hourly');
+const { checkRaidParty , checkRaidReady , checkHourly, checkAutoFind, getRewards } = require('./hourly');
 const { checkFestivalGift } = require('./festival gift');
 
 const { boot } = require('./boot');
@@ -26,11 +26,13 @@ client.on('messageCreate', async (message) => {
   checkHourly(message, client);
   checkRaidParty(message, client);
   checkRaidReady(message, client);
+  checkAutoFind(message, client);
   checkFestivalGift(message);
 })
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
-  getRewards(newMessage, client)
+  checkAutoFind(newMessage, client);
+  getRewards(newMessage, client);
 });
 
 
