@@ -10,6 +10,13 @@ let raidAutoStart = false;
 let raidReady = false;
 let raidAutoFind = false;
 
+function safeSend(channel, content) {
+  return channel.send(content).catch(err => {
+    helper.msgLogger(`❌ Failed to send "${content}" to channel ${channel.id}:`);
+    helper.msgLogger(err);
+  });
+}
+
 function startAutoReminder(client) {
   const channel = client.channels.cache.get(botChannelId);
   const ownChannel = client.channels.cache.get(ownChannelId);
@@ -23,18 +30,18 @@ function startAutoReminder(client) {
 
     if (now - lastHourlyTime >= HOURLY_INTERVAL) {
       helper.msgLogger("Didn't receive hourly reminder for more than 65 minutes, automatically sent .hourly");
-      channel.send(".hourly").catch(console.error);
+      safeSend(channel, ".hourly");
       lastHourlyTime = now; // 重置時間
     }
 
     if (now - lastLottoTime >= LOTTO_INTERVAL) {
       helper.msgLogger("Didn't receive lotto reminder for more than 17 minutes, automatically sent .lotto");
-      channel.send(".lotto").catch(console.error);
+      safeSend(channel, ".lotto");
       lastLottoTime = now; // 重置時間
     }
 
     if (raidAutoStart){
-      ownChannel.send(".rd lobby").catch(console.error);
+      safeSend(ownChannel, ".rd lobby");
     }
   }, 60 * 1000); // 每分鐘檢查一次
 
@@ -116,7 +123,7 @@ async function checkRaidParty(message, client){
         const sortedMembers = kickedMembers.sort((a, b) => b.index - a.index); // 降冪排序
         for (const member of sortedMembers) {
           helper.msgLogger(`⚠️ 發現黑名單玩家：${member.name}，位置 index：${member.index}`);
-          ownChannel.send(`.rd kick ${member.index}`);
+          safeSend(ownChannel, `.rd kick ${member.index}`);
           await delay(1000); // 每人間隔 0.5 秒
         return;
         }
@@ -126,7 +133,7 @@ async function checkRaidParty(message, client){
       if (members.length >= 4){
         helper.msgDebugger("人來啦!!")
         await delay(1000);
-        ownChannel.send(".rd start");
+        safeSend(ownChannel, ".rd start");
         helper.msgLogger("ready to start raid!!!")
 
         // await delay(2000);
@@ -161,25 +168,81 @@ async function checkRaidReady(message, client){
   }
 }
 
-async function checkAutoFind(message,client){
-  if (message.channelId != ownChannelId) return;
+// async function checkAutoFind(message,client){
+//   if (message.channelId != ownChannelId) return;
+//   const ownChannel = client.channels.cache.get(ownChannelId);
+//   let [title, desc, embedAuthor, footer] = helper.messageExtractor(message);
+
+//   if (title.includes('Raid Lobbies')) {
+//     const raids = helper.parseRaidLobbies(desc)
+
+//     for (const raid of raids) {
+//       if (wishList.includes(raid.name)) {
+//         ownChannel.send(`.rd join ${raid.id}`)
+//         // 在這加入判斷是否加入成功
+//         helper.msgLogger('success to find!!')
+//         raidAutoFind = false;
+//         break;
+//       }
+//     }
+//   }
+// }
+
+async function checkAutoFind(message, client) {
+  if (message.channelId !== ownChannelId) return;
   const ownChannel = client.channels.cache.get(ownChannelId);
   let [title, desc, embedAuthor, footer] = helper.messageExtractor(message);
 
   if (title.includes('Raid Lobbies')) {
-    raids = helper.parseRaidLobbies(desc)
-    // console.log(raids)
+    raids = helper.parseRaidLobbies(desc);
 
     for (const raid of raids) {
       if (wishList.includes(raid.name)) {
-        ownChannel.send(`.rd join ${raid.id}`)
-        helper.msgLogger('success to find!!')
-        raidAutoFind = false;
-        break;
+        const sentMsg = await safeSend(ownChannel, `.rd join ${raid.id}`);
+        helper.msgLogger(`try to join ${raid.name} raid（ID: ${raid.id}）`);
+
+        const result = await waitForJoinResult(ownChannel);
+        if (result === 'success') {
+          helper.msgLogger('success to join raid, stop auto find');
+          raidAutoFind = false;
+          break;
+        } else {
+          helper.msgLogger('加入失敗，繼續搜尋下一場');
+          continue;
+        }
       }
     }
   }
 }
+
+// 加入後等待 AniGame 的回應
+async function waitForJoinResult(channel) {
+  try {
+    const response = await channel.awaitMessages({
+      filter: m =>
+        m.author.username === 'AniGame' &&
+        m.author.bot &&
+        m.embeds.length > 0 &&
+        m.embeds[0].description,
+      max: 1,
+      time: 5000, // 最多等 5 秒
+      errors: ['time']
+    });
+
+    const reply = response.first();
+    const desc = reply.embeds[0].description;
+
+    if (desc.includes('there was an error joining the lobby')) {
+      return 'fail';
+    }
+
+    return 'success';
+  } catch (e) {
+    // 超時沒收到訊息
+    return 'fail';
+  }
+}
+
 
 async function tryClickButton(message, retries = 3, delayMs = 1000, pos = {X: 0, Y: 0}) {
   for (let i = 0; i < retries; i++) {
@@ -190,6 +253,12 @@ async function tryClickButton(message, retries = 3, delayMs = 1000, pos = {X: 0,
     } catch (err) {
       helper.msgLogger(`⚠️ Do button click failed on try #${i + 1}`);
       helper.msgLogger(err);
+
+      // 若錯誤為 Unknown Message，可立即跳出重試
+      if (err.code === 10008) {
+        helper.msgLogger("⛔ Message 已不存在，停止重試");
+        return false;
+      }
       if (i < retries - 1) {
         await new Promise(resolve => setTimeout(resolve, delayMs)); // 等待一下再重試
       }
@@ -235,11 +304,11 @@ async function checkHourly(message, client) {
       try {
         // 等待 1 秒後發送 `.hourly`
         await delay(1000);
-        await channel.send(".hourly");
+        await safeSend(channel, ".hourly");
         helper.msgLogger('Do hourly success');
 
         await delay(1000);
-        await channel.send(".stam");
+        await safeSend(channel, ".stam");
         helper.msgLogger('Check stamina');
 
       } catch (err) {
@@ -268,8 +337,7 @@ async function checkHourly(message, client) {
     lastLottoTime = Date.now(); // ➤ 更新時間
 
     setTimeout(() => {
-      channel.send(".lotto")
-        .catch((err) => console.error("❌ 發送 `.lotto` 失敗:", err));
+      safeSend(channel, ".lotto");
     }, 1000); // 延遲 1 秒（1000 毫秒）
   }
 
@@ -290,7 +358,7 @@ async function checkHourly(message, client) {
   // check raid energy
   if (message.content.includes('Energy Reminder') && message.content.includes(user_at)){
     helper.msgLogger('Got Energy Reminder!!')
-    channel.send(".rd bt all");
+    safeSend(channel, ".rd bt all");
   }
 
   if (title.includes('Raid Boss Battle') && embedAuthor.replace(/_/g, "").includes(username) && footer.includes('React with ✅ to confirm the battle!')){
@@ -306,14 +374,14 @@ async function checkHourly(message, client) {
       helper.msgLogger(`stam: (current, max) = (${current}, ${max})`);
       if (current >= max-60){
         helper.msgLogger("Do bt all!!!")
-        channel.send(".bt all")
+        safeSend(channel, ".bt all");
       }
     } 
   }
 
   if (message.content.includes('Stamina Reminder') && message.content.includes(user_at)){
     helper.msgLogger('Got Stamina Reminder!!')
-    channel.send(".bt all");
+    safeSend(channel, ".bt all");
   }
 
 }
@@ -347,8 +415,6 @@ async function autoFindRaid(message, client) {
   if (message.content === 'stop find'){
     raidAutoFind = false;
   }
-
-
 }
 
 
