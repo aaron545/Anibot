@@ -10,6 +10,8 @@ let raidAutoStart = false;
 let raidReady = false;
 let raidAutoFind = false;
 
+let postfix;
+
 function safeSend(channel, content) {
   return channel.send(content).catch(err => {
     helper.msgLogger(`❌ Failed to send "${content}" to channel ${channel.id}:`);
@@ -47,7 +49,12 @@ function startAutoReminder(client) {
 
   setInterval(() => {
     if (raidAutoFind){
-      ownChannel.send(`.rd lobbies -n ${wishList.join(',')} -r r,sr,ur -d m,h,i`).catch(console.error);
+      if (!postfix) {
+        ownChannel.send(`.rd lobbies -n ${wishList.join(',')} -r r,sr,ur -d m,h,i`).catch(console.error);
+      }
+      else {
+        ownChannel.send(postfix).catch(console.error);
+      }
     }
   }, 16 * 1000); // 每16秒
 }
@@ -83,12 +90,15 @@ async function checkRaidParty(message, client){
     raidReady = false;
   }
 
-  if (message.content === 'start find' && message.author.username === client.user.username) {
+  if (message.content.includes("start find") && message.author.username === client.user.username) {
+    postfix = message.content.replace(/^start find\s*/i, "");
+    console.log(`postfix = "${postfix}"`)
     helper.msgLogger("start auto find!!");
     raidAutoFind = true;
   }
 
   if (message.content === 'stop find' && message.author.username === client.user.username) {
+    postfix = ''
     helper.msgLogger("stop auto find!!");
     raidAutoFind = false;
   }
@@ -203,11 +213,11 @@ async function checkAutoFind(message, client) {
 
         const result = await waitForJoinResult(ownChannel);
         if (result === 'success') {
-          helper.msgLogger('success to join raid, stop auto find');
+          helper.msgLogger('Success to join raid, stop auto find');
           raidAutoFind = false;
           break;
         } else {
-          helper.msgLogger('加入失敗，繼續搜尋下一場');
+          helper.msgLogger('Failed to join raid, auto find continuously');
           continue;
         }
       }

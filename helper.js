@@ -51,7 +51,7 @@ function extractRaidParticipants(msg) {
   return { leader, members };
 }
 
-function parseRewards(description) {
+function getCardRarity(text) {
   const rarityMap = {
     common: 'C',
     not: 'U',
@@ -60,6 +60,22 @@ function parseRewards(description) {
     ultra: 'U',
   };
 
+  const emojis = [...text.matchAll(/<:([^:]+):\d+>/g)].map(m => m[1]);
+  let rarity = '';
+  for (const e of emojis) {
+    if (rarityMap[e]) {
+      rarity += rarityMap[e];
+    }
+  }
+  return rarity || null;
+}
+
+function getWildCardName(text) {
+  const match = text.match(/<:[^:]+:\d+>\*\*(.+?)\*\*/);
+  return match ? match[1].trim() : null;
+}
+
+function parseRewards(description) {
   const elementEmojiMap = {
     Null: '🚫',
     Neutral: '✨',
@@ -79,18 +95,14 @@ function parseRewards(description) {
       return 'No Rewards Given 💩 , ban 211 !!!';
     }
 
-    const emojis = [...line.matchAll(/<:([^:]+):\d+>/g)].map(m => m[1]);
+    // const emojis = [...line.matchAll(/<:([^:]+):\d+>/g)].map(m => m[1]);
     const cleanedText = line.replace(/<[^>]+>/g, '').trim();
 
-    const isCard = emojis.some(e => rarityMap[e]);
+    const rarity = getCardRarity(line); // 使用抽離的函式
+    const isCard = rarity !== null;
     let suffixEmoji = '';
 
     if (isCard) {
-      let rarity = '';
-      for (const e of emojis) {
-        rarity += (rarityMap[e] || 'unknown');
-      }
-      // msgDebugger(`rarity: ${rarity}`)
       const emoji = /SR|UR/.test(rarity) ? '🎴' : '🃏';
       return `${rarity.trim()} ${cleanedText} ${emoji}`;
     }
@@ -144,6 +156,8 @@ module.exports = {
   msgDebugger,
   extractStamina,
   extractRaidParticipants,
+  getCardRarity,
+  getWildCardName,
   parseRewards,
   getKickedMembers,
   parseRaidLobbies,
