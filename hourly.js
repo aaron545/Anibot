@@ -90,7 +90,7 @@ async function checkRaidParty(message, client){
     raidReady = false;
   }
 
-  if (message.content.includes("start find") && message.author.username === client.user.username) {
+  if (message.content.toLowerCase().startsWith("start find") && message.author.username === client.user.username) {
     postfix = message.content.replace(/^start find\s*/i, "");
     console.log(`postfix = "${postfix}"`)
     helper.msgLogger("start auto find!!");
