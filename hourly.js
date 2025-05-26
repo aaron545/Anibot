@@ -92,12 +92,12 @@ async function checkRaidParty(message, client){
 
   if (message.content.toLowerCase().startsWith("start find") && message.author.username === client.user.username) {
     postfix = message.content.replace(/^start find\s*/i, "");
-    console.log(`postfix = "${postfix}"`)
+    // console.log(`postfix = "${postfix}"`)
     helper.msgLogger("start auto find!!");
     raidAutoFind = true;
   }
 
-  if (message.content === 'stop find' && message.author.username === client.user.username) {
+  if (message.content.toLowerCase() === 'stop find' && message.author.username === client.user.username) {
     postfix = ''
     helper.msgLogger("stop auto find!!");
     raidAutoFind = false;
@@ -207,7 +207,7 @@ async function checkAutoFind(message, client) {
     raids = helper.parseRaidLobbies(desc);
 
     for (const raid of raids) {
-      if (wishList.includes(raid.name)) {
+      if (raidAutoFind && embedAuthor.includes(client.user.username)) {
         const sentMsg = await safeSend(ownChannel, `.rd join ${raid.id}`);
         helper.msgLogger(`try to join ${raid.name} raid（ID: ${raid.id}）`);
 
