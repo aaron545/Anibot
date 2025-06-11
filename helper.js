@@ -103,7 +103,7 @@ function parseRewards(description) {
     let suffixEmoji = '';
 
     if (isCard) {
-      const emoji = /SR|UR/.test(rarity) ? '🎴' : '🃏';
+      const emoji = /SR|UR/.test(rarity) ? '🎴' : '🖼️';
       return `${rarity.trim()} ${cleanedText} ${emoji}`;
     }
 
