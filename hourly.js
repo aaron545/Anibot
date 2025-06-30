@@ -12,6 +12,21 @@ let raidAutoFind = false;
 
 let postfix;
 
+let spamtext = [
+  "別墅裡面唱K",
+  "水池裡面銀龍魚",
+  "我送阿叔茶具",
+  "他研磨下筆",
+  "直接送我四個字",
+  "大展鴻圖",
+  "大師親手提筆字",
+  "大展鴻圖",
+  "搬來放在辦公室",
+  "大展鴻圖",
+  "關公都點頭 有料",
+  "---------------"]
+let index = 0;
+
 function safeSend(channel, content) {
   return channel.send(content).catch(err => {
     helper.msgLogger(`❌ Failed to send "${content}" to channel ${channel.id}:`);
@@ -22,6 +37,9 @@ function safeSend(channel, content) {
 function startAutoReminder(client) {
   const channel = client.channels.cache.get(botChannelId);
   const ownChannel = client.channels.cache.get(ownChannelId);
+
+  const evSpawnChannel = client.channels.cache.get("1238169876997079192");
+
   if (!channel) return;
 
   setInterval(() => {
@@ -45,6 +63,7 @@ function startAutoReminder(client) {
     if (raidAutoStart){
       safeSend(ownChannel, ".rd lobby");
     }
+
   }, 60 * 1000); // 每分鐘檢查一次
 
   setInterval(() => {
@@ -56,6 +75,10 @@ function startAutoReminder(client) {
         ownChannel.send(postfix).catch(console.error);
       }
     }
+
+    safeSend(evSpawnChannel, spamtext[index]);
+    index = (index + 1) % spamtext.length;
+
   }, 16 * 1000); // 每16秒
 }
 
@@ -254,7 +277,7 @@ async function waitForJoinResult(channel) {
 }
 
 
-async function tryClickButton(message, retries = 3, delayMs = 1000, pos = {X: 0, Y: 0}) {
+async function tryClickButton(message, retries = 5, delayMs = 1000, pos = {X: 0, Y: 0}) {
   for (let i = 0; i < retries; i++) {
     try {
       await message.clickButton(pos);
