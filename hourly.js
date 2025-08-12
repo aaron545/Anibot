@@ -79,7 +79,7 @@ function startAutoReminder(client) {
     safeSend(evSpawnChannel, spamtext[index]);
     index = (index + 1) % spamtext.length;
 
-  }, 16 * 1000); // 每16秒
+  }, 12 * 1000); // 每16秒
 }
 
 async function checkRaidParty(message, client){
@@ -430,6 +430,12 @@ async function getRewards(message, client) {
     helper.msgLogger(`The lotto rewards: ${helper.parseRewards(desc)}`);
   }
 
+  if (title.includes('Golden Egg') && title.replace(/_/g, "").includes(username)){
+    helper.msgLogger('you got a golden egg, WTF?????? 🥚🥚🥚')
+    helper.msgLogger('you got a golden egg, WTF?????? 🥚🥚🥚')
+    helper.msgLogger('you got a golden egg, WTF?????? 🥚🥚🥚')
+  }
+
   // if (title.includes('Raid Boss Defeated') && embedAuthor.replace(/_/g, "").includes(username)){
   //   helper.msgLogger(`The raid rewards: ${helper.parseRewards(desc)}`);
   // }
@@ -451,4 +457,4 @@ async function autoFindRaid(message, client) {
 }
 
 
-module.exports = { startAutoReminder, checkRaidParty, checkRaidReady, checkAutoFind,  checkHourly, getRewards };
+module.exports = { startAutoReminder, checkRaidParty, checkRaidReady, checkAutoFind,  checkHourly, getRewards, tryClickButton};
