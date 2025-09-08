@@ -224,6 +224,7 @@ async function checkRaidReady(message, client){
 async function checkAutoFind(message, client) {
   if (message.channelId !== ownChannelId) return;
   const ownChannel = client.channels.cache.get(ownChannelId);
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   let [title, desc, embedAuthor, footer] = helper.messageExtractor(message);
 
   if (title.includes('Raid Lobbies')) {
@@ -241,6 +242,7 @@ async function checkAutoFind(message, client) {
           break;
         } else {
           helper.msgLogger('Failed to join raid, auto find continuously');
+          await delay(5000);
           continue;
         }
       }
@@ -431,9 +433,9 @@ async function getRewards(message, client) {
   }
 
   if (title.includes('Golden Egg') && title.replace(/_/g, "").includes(username)){
-    helper.msgLogger('you got a golden egg, WTF?????? 🥚🥚🥚')
-    helper.msgLogger('you got a golden egg, WTF?????? 🥚🥚🥚')
-    helper.msgLogger('you got a golden egg, WTF?????? 🥚🥚🥚')
+    helper.msgLogger('You got a golden egg, WTF?????? 🥚🥚🥚')
+    helper.msgLogger('You got a golden egg, WTF?????? 🥚🥚🥚')
+    helper.msgLogger('You got a golden egg, WTF?????? 🥚🥚🥚')
   }
 
   // if (title.includes('Raid Boss Defeated') && embedAuthor.replace(/_/g, "").includes(username)){
