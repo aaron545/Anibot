@@ -9,6 +9,7 @@ const LOTTO_INTERVAL = 17 * 60 * 1000;  // 17 分鐘
 let raidAutoStart = false;
 let raidReady = false;
 let raidAutoFind = false;
+let raidAutoReady = false;
 
 let postfix;
 
@@ -120,10 +121,19 @@ async function checkRaidParty(message, client){
     raidAutoFind = true;
   }
 
+  if (message.content.toLowerCase().startsWith("ready start find") && message.author.username === client.user.username) {
+    postfix = message.content.replace(/^ready start find\s*/i, "");
+    // console.log(`postfix = "${postfix}"`)
+    helper.msgLogger("start auto find and auto start!!");
+    raidAutoFind = true;
+    raidAutoReady = true;
+  }
+
   if (message.content.toLowerCase() === 'stop find' && message.author.username === client.user.username) {
     postfix = ''
     helper.msgLogger("stop auto find!!");
     raidAutoFind = false;
+    raidAutoReady = false;
   }
 
   if (desc.includes("are you sure you would like to kick")){
@@ -221,6 +231,31 @@ async function checkRaidReady(message, client){
 //   }
 // }
 
+async function isRaidLeader(channel, client) {
+  try {
+    const response = await channel.awaitMessages({
+      filter: m =>
+        m.author.username === 'AniGame' &&
+        m.author.bot &&
+        m.embeds.length > 0 &&
+        m.embeds[0].description,
+      max: 1,
+      time: 5000, // 最多等 5 秒
+      errors: ['time']
+    });
+
+    const reply = response.first();
+    const desc = reply.embeds[0].description;
+    const { leader, members } = helper.extractRaidParticipants(desc);
+    helper.msgDebugger(`Leader is ${leader}`)
+
+    return leader === client.user.username;
+  } catch (e) {
+    helper.msgLogger("❌ isRaidLeader timeout or error", e);
+    return false;
+  }
+}
+
 async function checkAutoFind(message, client) {
   if (message.channelId !== ownChannelId) return;
   const ownChannel = client.channels.cache.get(ownChannelId);
@@ -232,14 +267,28 @@ async function checkAutoFind(message, client) {
 
     for (const raid of raids) {
       if (raidAutoFind && embedAuthor.includes(client.user.username)) {
-        const sentMsg = await safeSend(ownChannel, `.rd join ${raid.id}`);
+        // const sentMsg = await safeSend(ownChannel, `.rd join ${raid.id}`);
+        safeSend(ownChannel, `.rd join ${raid.id}`);
         helper.msgLogger(`try to join ${raid.name} raid（ID: ${raid.id}）`);
 
         const result = await waitForJoinResult(ownChannel);
         if (result === 'success') {
           helper.msgLogger('Success to join raid, stop auto find');
           raidAutoFind = false;
+          if (raidAutoReady){
+            safeSend(ownChannel, `.rd lobby`);
+            if (await isRaidLeader(ownChannel, client)) {
+              helper.msgLogger("I'm the leader, do raid public!");
+              safeSend(ownChannel, ".rd pub");
+              raidAutoReady = false;
+            } else {
+              helper.msgLogger("Not the leader, do rd ready.");
+              safeSend(ownChannel, ".rd ready");
+              raidAutoReady = false;
+            }
+          }
           break;
+
         } else {
           helper.msgLogger('Failed to join raid, auto find continuously');
           await delay(5000);
@@ -265,9 +314,9 @@ async function waitForJoinResult(channel) {
     });
 
     const reply = response.first();
-    const desc = reply.embeds[0].description;
+    const title = reply.embeds[0].title;
 
-    if (desc.includes('there was an error joining the lobby')) {
+    if (title.includes('Raid Join Error')) {
       return 'fail';
     }
 
@@ -277,6 +326,7 @@ async function waitForJoinResult(channel) {
     return 'fail';
   }
 }
+
 
 
 async function tryClickButton(message, retries = 5, delayMs = 1000, pos = {X: 0, Y: 0}) {
@@ -326,6 +376,10 @@ async function checkHourly(message, client) {
 
   if (message.content.includes('test211')){
     helper.msgDebugger('Bot is still alive!!!')
+  }
+
+  if (message.content.includes('rd vkick') && message.content.includes(user_at)) {
+    safeSend(channel, message);
   }
 
   if (message.content.includes('Hourly Reminder') && message.content.includes(user_at)) {
