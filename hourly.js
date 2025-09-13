@@ -275,6 +275,7 @@ async function checkAutoFind(message, client) {
         if (result === 'success') {
           helper.msgLogger('Success to join raid, stop auto find');
           raidAutoFind = false;
+          await delay(3000);
           if (raidAutoReady){
             safeSend(ownChannel, `.rd lobby`);
             if (await isRaidLeader(ownChannel, client)) {
