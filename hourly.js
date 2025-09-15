@@ -1,4 +1,4 @@
-const { guildId = '', botChannelId, ownChannelId, anigameDMChannelId, wishList, lottox, lottoy } = require('./config.json');
+const { guildId = '', botChannelId, ownChannelId, anigameDMChannelId, wishList, lottox, lottoy, raidLevelCap, raidLevelGuarantee } = require('./config.json');
 const helper = require('./helper');
 let lastHourlyTime = Date.now();
 let lastLottoTime = Date.now();
@@ -262,39 +262,41 @@ async function checkAutoFind(message, client) {
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   let [title, desc, embedAuthor, footer] = helper.messageExtractor(message);
 
-  if (title.includes('Raid Lobbies')) {
+  if (title.includes('Raid Lobbies') && raidAutoFind && embedAuthor.includes(client.user.username)) {
     raids = helper.parseRaidLobbies(desc);
 
     for (const raid of raids) {
-      if (raidAutoFind && embedAuthor.includes(client.user.username)) {
-        // const sentMsg = await safeSend(ownChannel, `.rd join ${raid.id}`);
-        safeSend(ownChannel, `.rd join ${raid.id}`);
-        helper.msgLogger(`try to join ${raid.name} raid（ID: ${raid.id}）`);
+      helper.msgDebugger(`The level of ${raid.name} raid（ID: ${raid.id}）is ${raid.level}`)
+      if (raidAutoReady && (raid.level > raidLevelCap || raid.level < raidLevelGuarantee)) {
+        helper.msgLogger(`The level (${raid.level}) of ${raid.name} raid (ID: ${raid.id}) is out of range (${raidLevelGuarantee}–${raidLevelCap}), will continue finding raid.`);
+        continue;
+      }
+      safeSend(ownChannel, `.rd join ${raid.id}`);
+      helper.msgLogger(`try to join ${raid.name} raid（ID: ${raid.id}）`);
 
-        const result = await waitForJoinResult(ownChannel);
-        if (result === 'success') {
-          helper.msgLogger('Success to join raid, stop auto find');
-          raidAutoFind = false;
-          await delay(3000);
-          if (raidAutoReady){
-            safeSend(ownChannel, `.rd lobby`);
-            if (await isRaidLeader(ownChannel, client)) {
-              helper.msgLogger("I'm the leader, do raid public!");
-              safeSend(ownChannel, ".rd pub");
-              raidAutoReady = false;
-            } else {
-              helper.msgLogger("Not the leader, do rd ready.");
-              safeSend(ownChannel, ".rd ready");
-              raidAutoReady = false;
-            }
+      const result = await waitForJoinResult(ownChannel);
+      if (result === 'success') {
+        helper.msgLogger('Success to join raid, stop auto find');
+        raidAutoFind = false;
+        await delay(3000);
+        if (raidAutoReady){
+          safeSend(ownChannel, `.rd lobby`);
+          if (await isRaidLeader(ownChannel, client)) {
+            helper.msgLogger("I'm the leader, do raid public!");
+            safeSend(ownChannel, ".rd pub");
+            raidAutoReady = false;
+          } else {
+            helper.msgLogger("Not the leader, do rd ready.");
+            safeSend(ownChannel, ".rd ready");
+            raidAutoReady = false;
           }
-          break;
-
-        } else {
-          helper.msgLogger('Failed to join raid, auto find continuously');
-          await delay(5000);
-          continue;
         }
+        break;
+
+      } else {
+        helper.msgLogger('Failed to join raid, auto find continuously');
+        await delay(5000);
+        continue;
       }
     }
   }

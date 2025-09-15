@@ -7,5 +7,7 @@
   "kickList":["211","chi_shin","211_chishin","any you want"],
   "wishList":["Judar","Enel","Fran","Kiwi","Apple","Pickle"],
   "lottox":"you can change from 0 to 5",
-  "lottoy":"you can change from 0 to 5"
+  "lottoy":"you can change from 0 to 5",
+  "raidLevelCap":"2025",
+  "raidLevelGuarantee":"915"
 }
