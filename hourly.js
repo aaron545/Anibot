@@ -55,11 +55,11 @@ function startAutoReminder(client) {
       lastHourlyTime = now; // 重置時間
     }
 
-    if (now - lastLottoTime >= LOTTO_INTERVAL) {
-      helper.msgLogger("Didn't receive lotto reminder for more than 17 minutes, automatically sent .lotto");
-      safeSend(channel, ".lotto");
-      lastLottoTime = now; // 重置時間
-    }
+    // if (now - lastLottoTime >= LOTTO_INTERVAL) {
+    //   helper.msgLogger("Didn't receive lotto reminder for more than 17 minutes, automatically sent .lotto");
+    //   safeSend(channel, ".lotto");
+    //   lastLottoTime = now; // 重置時間
+    // }
 
     if (raidAutoStart){
       safeSend(ownChannel, ".rd lobby");
@@ -424,14 +424,14 @@ async function checkHourly(message, client) {
   }
 
   // check lotto 
-  if (message.content.includes('Lotto Reminder') && message.content.includes(user_at)){
-    helper.msgLogger('Got Lotto Reminder!!')
-    lastLottoTime = Date.now(); // ➤ 更新時間
+  // if (message.content.includes('Lotto Reminder') && message.content.includes(user_at)){
+  //   helper.msgLogger('Got Lotto Reminder!!')
+  //   lastLottoTime = Date.now(); // ➤ 更新時間
 
-    setTimeout(() => {
-      safeSend(channel, ".lotto");
-    }, 1000); // 延遲 1 秒（1000 毫秒）
-  }
+  //   setTimeout(() => {
+  //     safeSend(channel, ".lotto");
+  //   }, 1000); // 延遲 1 秒（1000 毫秒）
+  // }
 
   if (title.includes('Scratch Ticket') && embedAuthor.replace(/_/g, "").includes(username)){
     helper.msgLogger('Try to choose lotto!!!')
